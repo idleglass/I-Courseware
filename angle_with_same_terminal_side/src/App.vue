@@ -352,6 +352,7 @@ export default {
     background-color: #f2f2f2;
   }
   #canvas {
+    display: block;
   }
   #control{
     position: absolute;

@@ -22,9 +22,11 @@ export default {
         [10, -10, 15],
       ],
       toolSize: 50,
-      activeKnife: true,
+      zoom: 10,
+      activeKnife: false,
       activeTool: 0,
       isMouseClick: false,
+      isMouseDown: false,
       isMouseMove: false,
       mouseX: 0,
       mouseY: 0,
@@ -43,16 +45,19 @@ export default {
     this.initCanvas();
     this.bindEvents();
     this.drawCanvas();
-    this.activeTool = 1;
+    this.changeTool(1);
   },
   methods : {
     reset : function () {
-      this.activeKnife = true;
-      this.activeTool = 0;
+      this.activeKnife = false;
+      this.mouseX = this.mouseY = 0;
+      this.changeTool(this.activeTool);
     },
     initCanvas : function () {
       this.context.canvas.width = document.body.clientWidth;
       this.context.canvas.height = document.body.clientHeight;
+      //设定放大比例
+      this.zoom = Math.floor(Math.min(this.context.canvas.width, this.context.canvas.height)/80)*2;
     },
     bindEvents : function () {
       this.context.canvas.addEventListener('mousedown', this.mouseDown);
@@ -62,6 +67,8 @@ export default {
       this.context.canvas.addEventListener("touchstart", this.mouseDown);
       this.context.canvas.addEventListener("touchmove", this.mouseMove);
       this.context.canvas.addEventListener("touchend", this.mouseUp);
+      this.context.canvas.addEventListener("touchcancel", this.mouseLeave);
+      this.context.canvas.addEventListener("click", this.mouseClick);
       window.addEventListener("resize", this.resize);
       document.getElementById('reset').addEventListener('click', this.reset);
     },
@@ -69,8 +76,13 @@ export default {
       this.initCanvas();
       this.drawCanvas();
     },
+    mouseClick : function () {
+      console.log(event.type);
+      this.isMouseClick = true;
+    },
     mouseDown : function (event) {
-      this.isMouseMove = this.isMouseClick = true;
+      console.log(event.type);
+      this.isMouseMove = this.isMouseDown = true;
       let mouseXY = this.getMouseXY(event);
       this.mouseX = mouseXY.x;
       this.mouseY = mouseXY.y;
@@ -83,12 +95,13 @@ export default {
       }
     },
     mouseMove : function (event) {
+      console.log(event.type);
       event.preventDefault();
       let mouseXY = this.getMouseXY(event);
       this.mouseX = mouseXY.x;
       this.mouseY = mouseXY.y;
       if(!this.isMouseMove) return;
-      this.isMouseClick = false;
+      this.isMouseDown = false;
       if(this.activeKnife)
       {
         this.tvCutLineEndX = mouseXY.x;
@@ -101,11 +114,13 @@ export default {
       }
     },
     mouseUp : function () {
-      this.isMouseMove = this.isMouseClick = false;
+      console.log(event.type);
+      this.isMouseMove = this.isMouseDown = false;
       this.holdPolygon = this.holdPoint = undefined;
     },
     mouseLeave : function () {
-      this.isMouseMove = this.isMouseClick = false;
+      console.log(event.type);
+      this.isMouseMove = this.isMouseDown = false;
       this.holdPolygon = this.holdPoint = undefined;
     },
     getMouseXY : function (event) {
@@ -122,6 +137,7 @@ export default {
       this.cutParallelogram();
       this.drawTv();
       if(this.activeKnife && this.mouseX && this.mouseY) this.drawKnife(this.mouseX - this.toolSize/10, this.mouseY - this.toolSize*0.4);
+      this.isMouseClick = false;
     },
     drawBackground : function () {
       //画背景
@@ -152,7 +168,11 @@ export default {
       this.context.beginPath();
       this.context.arc(startX + this.toolSize / 2, startY + this.toolSize / 2, this.toolSize / 2, 0, 2 * Math.PI);
       //不允许多次切割
-      if(this.isMouseClick && this.tvParallelograms.length <= 1 && this.context.isPointInPath(this.mouseX, this.mouseY)) this.activeKnife = !this.activeKnife;
+      if(this.isMouseClick && this.tvParallelograms.length <= 1 && this.context.isPointInPath(this.mouseX, this.mouseY))
+      {
+        this.activeKnife = !this.activeKnife;
+        this.mouseX = this.mouseY = 0;
+      }
       //画小刀
       this.drawKnife(startX, startY);
       //点击四边形
@@ -162,8 +182,8 @@ export default {
         this.context.arc(startX + this.toolSize / 2, startY + i * this.toolSize + this.toolSize / 2, this.toolSize / 2, 0, 2 * Math.PI);
         if(this.isMouseClick && this.context.isPointInPath(this.mouseX, this.mouseY))
         {
-          this.activeTool = i;
-          this.activeKnife = true;
+          this.changeTool(i);
+          this.activeKnife = false;
           this.mouseX = this.mouseY = 0;
         }
       }
@@ -201,6 +221,17 @@ export default {
       this.context.fill();
       this.context.restore();
     },
+    changeTool : function (tool) {
+      this.activeTool = tool;
+      if(!this.activeTool)
+      {
+        this.tvParallelograms = [];
+        return;
+      }
+      let parallelogramSample = this.parallelogram[this.activeTool-1];
+      let parallelogramPoints = this.transferParallelogram2Points(Math.round(this.context.canvas.width/2 - this.toolSize), Math.round(this.context.canvas.height/2), parallelogramSample[0] * this.zoom, parallelogramSample[1] * this.zoom, parallelogramSample[2] * this.zoom);
+      this.tvParallelograms = [parallelogramPoints];
+    },
     drawParallelogram: function (parallelogramPoints, color/*optional*/, border/*optional*/) {
       this.drawPolygon(parallelogramPoints, color, border);
     },
@@ -236,7 +267,7 @@ export default {
         if(!this.tvParallelograms.hasOwnProperty(i)) continue;
         let polygon =  this.tvParallelograms[i];
         this.drawParallelogram(polygon, this.tvColors[colorI++]);
-        if(!this.activeKnife && this.isMouseClick && this.context.isPointInPath(this.mouseX, this.mouseY)) {
+        if(!this.activeKnife && this.isMouseDown && this.context.isPointInPath(this.mouseX, this.mouseY)) {
           this.holdPolygon = i;
         }
         if(colorI >= this.tvColors.length) colorI = 0;
@@ -368,19 +399,6 @@ export default {
   watch : {
     drawCanvasVars : function () {
       this.drawCanvas();
-    },
-    activeKnife : function () {
-
-    },
-    activeTool : function () {
-      if(!this.activeTool)
-      {
-        this.tvParallelograms = [];
-        return;
-      }
-      let parallelogramSample = this.parallelogram[this.activeTool-1];
-      let parallelogramPoints = this.transferParallelogram2Points(Math.round(this.context.canvas.width/2), Math.round(this.context.canvas.height/2), parallelogramSample[0] * 10, parallelogramSample[1] * 10, parallelogramSample[2] * 10);
-      this.tvParallelograms = [parallelogramPoints];
     }
   },
   computed : {
@@ -409,6 +427,9 @@ export default {
     top: 10px;
     margin: 0;
     color: #fff;
+  }
+  #canvas{
+    display: block;
   }
   #reset {
     position: absolute;
