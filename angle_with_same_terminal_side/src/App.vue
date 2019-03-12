@@ -33,8 +33,8 @@ export default {
   },
   methods : {
     initCanvas : function () {
-      this.context.canvas.width = document.body.clientWidth;
-      this.context.canvas.height = document.body.clientHeight;
+      this.context.canvas.width = Math.floor(document.body.clientWidth/2)*2;
+      this.context.canvas.height = Math.floor(document.body.clientHeight/2)*2;
     },
     bindEvents : function () {
       this.context.canvas.addEventListener('mousedown', this.mouseDown);
