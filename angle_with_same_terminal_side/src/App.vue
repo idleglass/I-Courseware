@@ -8,7 +8,7 @@
         <p><label>红色线条<input type="range" min="-1080" max="1080" step="1" v-model.number="redLineAngle">角度{{redLineAngle}}°</label></p>
       </div>
       <div id="reset">
-        <svg class="icon" style="width: 1em; height: 1em;vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1430"><path d="M713.536 255.232l-58.624 72.192L960 355.712 868.8 64l-72.512 89.344A458.88 458.88 0 0 0 523.52 64C269.76 64 64 269.184 64 522.24c0 253.12 205.76 458.24 459.52 458.24a459.648 459.648 0 0 0 429.44-294.72 65.408 65.408 0 0 0-37.824-84.48 65.728 65.728 0 0 0-84.8 37.76 328.32 328.32 0 0 1-306.752 210.56c-181.312 0-328.32-146.56-328.32-327.36 0-180.736 147.008-327.296 328.32-327.296 69.376 0 135.232 21.504 189.952 60.288" fill="#666666" p-id="1431"></path></svg>
+        <svg class="icon" style="width: 1em; height: 1em;vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M713.536 255.232l-58.624 72.192L960 355.712 868.8 64l-72.512 89.344A458.88 458.88 0 0 0 523.52 64C269.76 64 64 269.184 64 522.24c0 253.12 205.76 458.24 459.52 458.24a459.648 459.648 0 0 0 429.44-294.72 65.408 65.408 0 0 0-37.824-84.48 65.728 65.728 0 0 0-84.8 37.76 328.32 328.32 0 0 1-306.752 210.56c-181.312 0-328.32-146.56-328.32-327.36 0-180.736 147.008-327.296 328.32-327.296 69.376 0 135.232 21.504 189.952 60.288" fill="#666666"></path></svg>
       </div>
     </div>
   </div>
@@ -58,8 +58,8 @@ export default {
     },
     mouseDown : function (event) {
       //鼠标坐标
-      var x =(event.type === 'touchstart' ? event.touches[0].clientX : event.clientX) - this.context.canvas.getBoundingClientRect().left;
-      var y = (event.type === 'touchstart' ? event.touches[0].clientY : event.clientY) - this.context.canvas.getBoundingClientRect().top;
+      let x =(event.type === 'touchstart' ? event.touches[0].clientX : event.clientX) - this.context.canvas.getBoundingClientRect().left;
+      let y = (event.type === 'touchstart' ? event.touches[0].clientY : event.clientY) - this.context.canvas.getBoundingClientRect().top;
       //画两个透明的圆，并检测鼠标是否在圆上
       this.context.save();
       this.context.beginPath();
@@ -85,9 +85,9 @@ export default {
       event.preventDefault();
       if(!this.activeControl) return;
       //计算角度
-      var x = (event.type === 'touchmove' ? event.changedTouches[0].clientX : event.clientX) - this.context.canvas.getBoundingClientRect().left - this.context.canvas.width/2;
-      var y = (event.type === 'touchmove' ? event.changedTouches[0].clientY : event.clientY) - this.context.canvas.getBoundingClientRect().top - this.context.canvas.height/2;
-      var angle = x === 0 ? 90 : Math.ceil((Math.atan(Math.abs(y)/Math.abs(x)))*180/Math.PI);
+      let x = (event.type === 'touchmove' ? event.changedTouches[0].clientX : event.clientX) - this.context.canvas.getBoundingClientRect().left - this.context.canvas.width/2;
+      let y = (event.type === 'touchmove' ? event.changedTouches[0].clientY : event.clientY) - this.context.canvas.getBoundingClientRect().top - this.context.canvas.height/2;
+      let angle = x === 0 ? 90 : Math.ceil((Math.atan(Math.abs(y)/Math.abs(x)))*180/Math.PI);
       //根据象限计算新角度
       if(x >= 0)
       {
@@ -97,7 +97,7 @@ export default {
       {
         angle = y < 0 ? 180 - angle : 180 + angle;
       }
-      var oldCircle, circle,oldQuadrant,newQuadrant;
+      let oldCircle, circle, oldQuadrant, newQuadrant, newAngle;
       switch (this.activeControl) {
         case 'red':
           //吸附效果
@@ -108,7 +108,8 @@ export default {
           newQuadrant = Math.floor(angle/90)%4;
           if(oldQuadrant === 0 && newQuadrant === 3) circle--;
           else if(oldQuadrant === 3 && newQuadrant === 0) circle++;
-          this.redLineAngle = Math.max(-1080, Math.min(1080, angle + circle * 360));
+          newAngle = Math.max(-1080, Math.min(1080, angle + circle * 360));
+          if(Math.abs(this.redLineAngle) !== 1080 || Math.abs(this.redLineAngle - newAngle) < 20) this.redLineAngle = newAngle;
           break;
         case 'blue':
           if(Math.abs((this.redLineAngle + 10 * 360)%360 - angle) < 5) angle = (this.redLineAngle + 10 * 360)%360;
@@ -117,7 +118,8 @@ export default {
           newQuadrant = Math.floor(angle/90)%4;
           if(oldQuadrant === 0 && newQuadrant === 3) circle--;
           else if(oldQuadrant === 3 && newQuadrant === 0) circle++;
-          this.blueLineAngle = Math.max(-1080, Math.min(1080, angle + circle * 360));
+          newAngle = Math.max(-1080, Math.min(1080, angle + circle * 360));
+          if(Math.abs(this.blueLineAngle) !== 1080 || Math.abs(this.blueLineAngle - newAngle) < 20) this.blueLineAngle = newAngle;
           break;
       }
     },
@@ -134,9 +136,11 @@ export default {
     },
     drawCoordinateSystem : function () {
       //确定轴长度 = 画布高度和宽度较小值的1/2
-      var axisLong = Math.round(Math.min(this.context.canvas.width, this.context.canvas.height)/1.1);
+      let axisLong = Math.round(Math.min(this.context.canvas.width, this.context.canvas.height)/1.1);
       //确定刻度长度 = 轴长度/10 取整
-      var axisAtom = Math.floor((axisLong - 20)/20);
+      let axisAtom = Math.floor((axisLong - 20)/20);
+      //确定文字大小 = 刻度大小的4/5且不大于14
+      let fontSize = Math.min(Math.floor(axisAtom * 0.8), 16);
       /**
        * 画x轴
        */
@@ -163,17 +167,17 @@ export default {
       this.context.save();
       this.context.strokeStyle = '#000';
       this.context.lineWidth = 2;
-      this.context.font = '12px serif';
+      this.context.font = fontSize + 'px serif';
       this.context.textAlign = 'center';
       this.context.fillStyle = 'rgba(0,0,0,.5)';
-      for (var i = -10; i <= 10; i++)
+      for (let i = -10; i <= 10; i++)
       {
         if(i === 0) continue;
         this.context.beginPath();
         this.context.moveTo(this.context.canvas.width/2 + i * axisAtom, this.context.canvas.height/2);
         this.context.lineTo(this.context.canvas.width/2 + i * axisAtom, this.context.canvas.height/2-5);
         this.context.stroke();
-        this.context.fillText(i.toString(), this.context.canvas.width/2 + i * axisAtom, this.context.canvas.height/2 + 12);
+        this.context.fillText(i.toString(), this.context.canvas.width/2 + i * axisAtom, this.context.canvas.height/2 + fontSize);
       }
       this.context.restore();
       /**
@@ -200,31 +204,31 @@ export default {
       //number
       this.context.save();
       this.context.lineWidth = 2;
-      this.context.font = '12px serif';
+      this.context.font = fontSize + 'px serif';
       this.context.textAlign = 'center';
       this.context.fillStyle = 'rgba(0,0,0,.5)';
-      for (i = -10; i <= 10; i++)
+      for (let i = -10; i <= 10; i++)
       {
         if(i === 0) continue;
         this.context.beginPath();
         this.context.moveTo(this.context.canvas.width/2, this.context.canvas.height/2 + i * axisAtom);
         this.context.lineTo(this.context.canvas.width/2 + 5, this.context.canvas.height/2 + i * axisAtom);
         this.context.stroke();
-        this.context.fillText(i.toString(), this.context.canvas.width/2 - 12, this.context.canvas.height/2 + i * axisAtom + 6);
+        this.context.fillText(i.toString(), this.context.canvas.width/2 - fontSize, this.context.canvas.height/2 + i * axisAtom + fontSize/2);
       }
       this.context.restore();
       /**
        * 画圆点
        */
       this.context.save();
-      this.context.font = 'italic 16px serif';
+      this.context.font = 'italic ' + fontSize + 'px serif';
       this.context.textAlign = 'center';
       this.context.fillStyle = 'blue';
-      this.context.fillText('Ο', this.context.canvas.width/2 - 10, this.context.canvas.height/2 + 14);
+      this.context.fillText('Ο', this.context.canvas.width/2 - fontSize*0.6, this.context.canvas.height/2 + fontSize*0.9);
       this.context.restore();
     },
     drawLine : function () {
-      var i, plus, start = 40;
+      let i, plus, start = 40;
       //line
       this.context.save();
       this.context.beginPath();
@@ -251,7 +255,7 @@ export default {
       this.context.beginPath();
       plus = this.blueLineAngle > 0 ? 1 : -1;
       this.context.moveTo(start + this.context.canvas.width/2, this.context.canvas.height/2);
-      for(i = 0; i <= Math.abs(this.blueLineAngle); i=i+5)
+      for(let i = 0; i <= Math.abs(this.blueLineAngle); i=i+5)
       {
         this.context.lineTo(Math.cos((360 - i/180) * Math.PI)*(start+i*0.025 * plus) + this.context.canvas.width/2, this.context.canvas.height/2 + Math.sin((360 - i/180) * Math.PI)*(start+i*0.025 * plus) * plus)
       }
@@ -291,7 +295,7 @@ export default {
       start += 3;
       plus = this.redLineAngle > 0 ? 1 : -1;
       this.context.moveTo(start + this.context.canvas.width/2, this.context.canvas.height/2);
-      for(i = 0; i <= Math.abs(this.redLineAngle); i=i+5)
+      for(let i = 0; i <= Math.abs(this.redLineAngle); i=i+5)
       {
         this.context.lineTo(Math.cos((360 - i/180) * Math.PI)*(start+i*0.025*plus) + this.context.canvas.width/2, this.context.canvas.height/2 + Math.sin((360 - i/180) * Math.PI)*(start+i*0.025*plus) * plus)
       }
@@ -313,6 +317,24 @@ export default {
 </script>
 
 <style lang="css">
+  html{
+    font-size: 30px;
+    width: 100%;
+    height: 100%;
+  }
+  @media (min-width: 320px) {
+    html{
+      font-size: 40px;
+    }
+  }
+  @media (min-width: 350px) {
+    html{
+      font-size: 50px;
+    }
+  }
+  body{
+    font-size: .6rem;
+  }
   html, body, #app, #container{
     height: 100%;
   }
@@ -320,6 +342,7 @@ export default {
     padding: 0;
     margin: 0;
     font-family: -apple-system, "PingFang SC", "Helvetica Neue", STHeiti, "Microsoft Yahei", Tahoma, Simsun, sans-serif;
+    font-size: .28rem;
   }
   #container{
     position: relative;
@@ -329,22 +352,22 @@ export default {
   }
   #container h1{
     position: absolute;
-    left: 10px;
-    top: 10px;
+    left: .2rem;
+    top: .2rem;
     margin: 0;
   }
   #reset {
     position: absolute;
     border-radius: 50%;
-    box-shadow: 0 0 5px rgba(0,0,0,.3);
-    right: 10px;
-    top: 10px;
+    box-shadow: 0 0 .05rem rgba(0,0,0,.3);
+    right: .2rem;
+    top: .2rem;
     background: #fff;
-    width: 30px;
-    height: 30px;
+    width: .6rem;
+    height: .6rem;
     text-align: center;
     line-height: 1;
-    padding-top: 5px;
+    padding-top: .1rem;
     box-sizing: border-box;
     cursor: pointer;
   }
@@ -356,11 +379,11 @@ export default {
   }
   #control{
     position: absolute;
-    bottom : 10px;
-    left: 10px;
-    box-shadow: 0 0 5px rgba(0,0,0,.3);
-    border-radius: 6px;
-    padding: 0 10px;
+    bottom : .2rem;
+    left: .2rem;
+    box-shadow: 0 0 .1rem rgba(0,0,0,.3);
+    border-radius: .1rem;
+    padding: 0 .2rem;
     background-color: #f7f7f7;
   }
   #control p{
@@ -369,5 +392,6 @@ export default {
 
   }
   #control p input{
+    vertical-align: middle;
   }
 </style>
