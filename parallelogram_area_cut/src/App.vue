@@ -77,11 +77,9 @@ export default {
       this.drawCanvas();
     },
     mouseClick : function () {
-      console.log(event.type);
       this.isMouseClick = true;
     },
     mouseDown : function (event) {
-      console.log(event.type);
       this.isMouseMove = this.isMouseDown = true;
       let mouseXY = this.getMouseXY(event);
       this.mouseX = mouseXY.x;
@@ -95,7 +93,6 @@ export default {
       }
     },
     mouseMove : function (event) {
-      console.log(event.type);
       event.preventDefault();
       let mouseXY = this.getMouseXY(event);
       this.mouseX = mouseXY.x;
@@ -114,12 +111,10 @@ export default {
       }
     },
     mouseUp : function () {
-      console.log(event.type);
       this.isMouseMove = this.isMouseDown = false;
       this.holdPolygon = this.holdPoint = undefined;
     },
     mouseLeave : function () {
-      console.log(event.type);
       this.isMouseMove = this.isMouseDown = false;
       this.holdPolygon = this.holdPoint = undefined;
     },
